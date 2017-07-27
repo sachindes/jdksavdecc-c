@@ -3,21 +3,16 @@
 /*
   Copyright (c) 2014, J.D. Koftinoff Software, Ltd.
   All rights reserved.
-
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions are met:
-
    1. Redistributions of source code must retain the above copyright notice,
       this list of conditions and the following disclaimer.
-
    2. Redistributions in binary form must reproduce the above copyright
       notice, this list of conditions and the following disclaimer in the
       documentation and/or other materials provided with the distribution.
-
    3. Neither the name of J.D. Koftinoff Software, Ltd. nor the names of its
       contributors may be used to endorse or promote products derived from
       this software without specific prior written permission.
-
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -579,7 +574,117 @@ extern struct jdksavdecc_eui64 jdksavdecc_jdks_aem_control_ipv4_parameters;
 
 /*@}*/
 
+
+ * The following Multicast MAC addresses owned by J.D. Koftinoff Software, Ltd.
+ * are available to be used by anyone as long as their usage conforms to the recommendations
+ * defined in this file.
+ *
+ *    71:b3:d5:ed:cf:ff = JDKSAVDECC_JDKS_MULTICAST_LOG for multicasting entity log messages
+ *
+ * All other MAC addresses are for use by J.D. Koftinoff Software Ltd. only.
+ *
+ * The following 1722.1-2013 vendor control types are defined here for use by anyone:
+ *
+ *    70:b3:d5:ed:c0:00:00:00 = JDKSAVDECC_JDKS_AEM_CONTROL_LOG_TEXT for a logging string value control.
+ *    70:b3:d5:ed:c0:00:00:01 = JDKSAVDECC_JDKS_AEM_CONTROL_IPV4_PARAMETERS for setting IPv4 ethernet parameters.
+ */
+/*@{*/
+
+/** Gain control is a extention over part of SET CONTROL.
+ *	AEM COMMAND SET_CONTROL(0X18) [IEEE 1722.1 7.4 Commands and Responses]
+ *	Offset is considered as per IEEE 1722.1 7.3.4 Control Types
+ *      Offset  0:  EUI64: vendor_eui64 is (90:e0:f0:00:00:00:00:04 )
+ *      Offset  8:  GAIN/Volume value of 2 bytes length
+*/
+#define JDKSAVDECC_JDKS_GAIN_CONTROL_OFFSET_VENDOR_EUI64 ( JDKSAVDECC_AEM_COMMAND_SET_CONTROL_RESPONSE_LEN + 0 )
+#define JDKSAVDECC_JDKS_CONTROL_OFFSET_GAIN ( JDKSAVDECC_JDKS_GAIN_CONTROL_OFFSET_VENDOR_EUI64 + 8 )
+#define JDKSAVDECC_JDKS_CONTROL_HEADER_LEN JDKSAVDECC_JDKS_CONTROL_OFFSET_GAIN
+#define JDKSAVDECC_JDKS_GAIN_CONTROL_RESPONSE_OFFSET_VENDOR_EUI64 ( JDKSAVDECC_AEM_COMMAND_SET_CONTROL_COMMAND_LEN + 0 )
+#define JDKSAVDECC_JDKS_CONTROL_RESPONSE_OFFSET_GAIN ( JDKSAVDECC_JDKS_GAIN_CONTROL_RESPONSE_OFFSET_VENDOR_EUI64 + 8 )
+#define JDKSAVDECC_JDKS_CONTROL_RESPONSE_HEADER_LEN JDKSAVDECC_JDKS_CONTROL_RESPONSE_OFFSET_GAIN
+
+/**
+ * @brief The jdksavdecc_jdks_gain_control struct is a high level representation of the data transported
+ *        to send SET control message for gain/volume.
+ */
+struct jdksavdecc_jdks_gain_control
+{
+    struct jdksavdecc_aem_command_set_control cmd;
+    struct jdksavdecc_eui64 vendor_eui64;
+	uint16_t gain;
+};
+
+/**
+ * @brief The jdksavdecc_jdks_gain_control_response struct is a high level representation of the data transported
+ *        to send SET control response message for gain/volume.
+*/
+struct jdksavdecc_jdks_gain_control_response
+{
+    struct jdksavdecc_aem_command_set_control_response cmd;
+    struct jdksavdecc_eui64 vendor_eui64;
+	uint16_t gain;
+};
+
+/**
+ * @brief jdksavdecc_aem_command_set_control_gain_read parses all the data in a SET CONTROL command received
+ *
+ * @param p
+ *        Pointer to the jdksavdecc_jdks_gain_control structure
+ *
+ * @param buf
+ *        The raw ethernet frame packet, starting at DA,SA,Ethertype
+ *
+ * @param len
+ *        The length of the memory at buf
+ *
+ * @return The length of the data parsed, or -1 on error
+ */
+static inline ssize_t jdksavdecc_aem_command_set_control_gain_read( struct jdksavdecc_jdks_gain_control *p, void *buf, size_t pos, size_t len)
+{
+	struct jdksavdecc_eui64 vendorid;
+
+	ssize_t r = jdksavdecc_validate_range( pos, len, JDKSAVDECC_JDKS_CONTROL_HEADER_LEN);
+
+    if ( r >= 0 )
+    {
+        jdksavdecc_aem_command_set_control_response_read( &p->cmd, buf, pos, len );
+        jdksavdecc_eui64_read( &p->vendor_eui64, buf, JDKSAVDECC_JDKS_GAIN_CONTROL_OFFSET_VENDOR_EUI64 + pos, len );
+        if (jdksavdecc_eui64_compare( &vendorid, &p->vendor_eui64 ) == 0)
+        {
+            jdksavdecc_uint16_read( &p->gain, buf, JDKSAVDECC_JDKS_CONTROL_OFFSET_GAIN + pos,len);
+            r = 2;
+        }
+    }
+    return r;
+}
+
+/**
+ * @brief jdksavdecc_aem_command_set_control_gain_write fills frame with SET CONTROL command for gain value
+ *
+ * @param p
+ *        Pointer to the jdksavdecc_jdks_gain_control structure
+ *
+ * @param buf
+ *        The raw ethernet frame packet, starting at DA,SA,Ethertype
+ *
+ * @param len
+ *        The length of the memory at buf
+ *
+ * @return The length of the data parsed, or -1 on error
+ */
+static inline ssize_t jdksavdecc_aem_command_set_control_gain_write( struct jdksavdecc_jdks_gain_control *p, void *buf, size_t pos, size_t len)
+{
+	ssize_t r = jdksavdecc_validate_range( pos, len, JDKSAVDECC_JDKS_CONTROL_HEADER_LEN);
+
+    if ( r >= 0 )
+    {
+        jdksavdecc_aem_command_set_control_response_write( &p->cmd, buf, pos, len );
+        jdksavdecc_eui64_write( &p->vendor_eui64, buf, JDKSAVDECC_JDKS_GAIN_CONTROL_OFFSET_VENDOR_EUI64 + pos, len );
+	jdksavdecc_uint16_write( p->gain, buf, JDKSAVDECC_JDKS_CONTROL_OFFSET_GAIN + pos, len );
+    }
+    return r;
+}
+/*@}*/
 #ifdef __cplusplus
 }
 #endif
-
