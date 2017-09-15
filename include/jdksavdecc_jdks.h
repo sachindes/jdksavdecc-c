@@ -3,16 +3,21 @@
 /*
   Copyright (c) 2014, J.D. Koftinoff Software, Ltd.
   All rights reserved.
+  
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions are met:
+  
    1. Redistributions of source code must retain the above copyright notice,
       this list of conditions and the following disclaimer.
+	  
    2. Redistributions in binary form must reproduce the above copyright
       notice, this list of conditions and the following disclaimer in the
       documentation and/or other materials provided with the distribution.
+	  
    3. Neither the name of J.D. Koftinoff Software, Ltd. nor the names of its
       contributors may be used to endorse or promote products derived from
       this software without specific prior written permission.
+	  
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -572,12 +577,14 @@ static inline ssize_t
 
 extern struct jdksavdecc_eui64 jdksavdecc_jdks_aem_control_ipv4_parameters;
 
+/*@}*/
 /** Gain control is a extention over part of SET CONTROL.
  *	AEM COMMAND SET_CONTROL(0X18) [IEEE 1722.1 7.4 Commands and Responses]
  *	Offset is considered as per IEEE 1722.1 7.3.4 Control Types
  *      Offset  0:  EUI64: vendor_eui64 is (90:e0:f0:00:00:00:00:04 )
  *      Offset  8:  GAIN/Volume value of 2 bytes length
 */
+/*@{*/
 #define JDKSAVDECC_JDKS_GAIN_CONTROL_OFFSET_VENDOR_EUI64 ( JDKSAVDECC_AEM_COMMAND_SET_CONTROL_RESPONSE_LEN + 0 )
 #define JDKSAVDECC_JDKS_CONTROL_OFFSET_GAIN ( JDKSAVDECC_JDKS_GAIN_CONTROL_OFFSET_VENDOR_EUI64 + 8 )
 #define JDKSAVDECC_JDKS_CONTROL_HEADER_LEN JDKSAVDECC_JDKS_CONTROL_OFFSET_GAIN
@@ -666,6 +673,7 @@ static inline ssize_t jdksavdecc_aem_command_set_control_gain_write( struct jdks
     }
     return r;
 }
+/*@}*/
 /*@}*/
 #ifdef __cplusplus
 }
